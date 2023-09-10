@@ -61,7 +61,7 @@ def cover_img(opt):
 
 def cover_model(opt):
     project_path = Path(opt['project'])
-    subprocess.run(["/bin/bash", "cover_model.sh" , opt['model'] , str(project_path)] , timeout=5 )
+    subprocess.run(["/bin/bash", "convert_model.sh" , opt['model'] , str(project_path)] , timeout=5 )
     
 
 
