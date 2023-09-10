@@ -36,7 +36,7 @@ in th_results is copied from the original in EEMBC.
 #include "ic/ic_model_data.h"
 #include "ic/ic_model_settings.h"
 
-#include "img.cc"
+#include "img.h"
 
 UnbufferedSerial pc(USBTX, USBRX);
 DigitalOut timestampPin(D7);
@@ -46,14 +46,15 @@ constexpr int kTensorArenaSize = ARENA_SIZE;
 alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 
 #define QUANT_MODEL false
-#define IO_TYPE float
+#define IN_IO_TYPE float
+#define OUT_IO_TYPE float
 #define OP_NUM 7
-tflite::MicroModelRunner<int32_t, IO_TYPE, OP_NUM> *runner;
+tflite::MicroModelRunner<IN_IO_TYPE, OUT_IO_TYPE, OP_NUM> *runner;
 
 // Implement this method to prepare for inference and preprocess inputs.
 void th_load_tensor() {
 //   runner->SetZeroInput();
-    runner->SetInput(data_images_dogs_bin)
+    int input_length = runner->SetInput((float*)img_bin);
 }
 
 // Add to this method to return real inference results.
@@ -65,7 +66,8 @@ void th_results() {
    */
   th_printf("m-results-[");
   int kCategoryCount = 10;
-
+  float maxx = -1;
+  int maxx_idx = -1;
   for (size_t i = 0; i < kCategoryCount; i++) {
     float converted =
     #if QUANT_MODEL
@@ -74,13 +76,14 @@ void th_results() {
     #else
         runner->GetOutput()[i];
     #endif // IO_TYPE == int8_t
-
-    th_printf("%0.3f", converted);
+    if(converted > maxx) maxx = converted , maxx_idx = i;
+    th_printf("%0.6f", converted);
     if (i < (nresults - 1)) {
       th_printf(",");
     }
   }
   th_printf("]\r\n");
+  th_printf("max class : %d , conf : %f\r\n" , maxx_idx , maxx);
   th_printf("m-arena-size : %d bytes\r\n" , runner->arena_size() );
 }
 
@@ -98,7 +101,7 @@ void th_final_initialize(void) {
   resolver.AddReshape();
   resolver.AddSoftmax();
   resolver.AddAveragePool2D();
-  static tflite::MicroModelRunner<IO_TYPE, IO_TYPE, OP_NUM> model_runner(
+  static tflite::MicroModelRunner<IN_IO_TYPE, OUT_IO_TYPE, OP_NUM> model_runner(
       model, resolver, tensor_arena, kTensorArenaSize);
   runner = &model_runner;
 }
