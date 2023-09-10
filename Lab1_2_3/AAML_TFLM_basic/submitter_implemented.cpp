@@ -36,6 +36,8 @@ in th_results is copied from the original in EEMBC.
 #include "ic/ic_model_data.h"
 #include "ic/ic_model_settings.h"
 
+#include "img.cc"
+
 UnbufferedSerial pc(USBTX, USBRX);
 DigitalOut timestampPin(D7);
 
@@ -46,11 +48,12 @@ alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 #define QUANT_MODEL false
 #define IO_TYPE float
 #define OP_NUM 7
-tflite::MicroModelRunner<IO_TYPE, IO_TYPE, OP_NUM> *runner;
+tflite::MicroModelRunner<int32_t, IO_TYPE, OP_NUM> *runner;
 
 // Implement this method to prepare for inference and preprocess inputs.
 void th_load_tensor() {
-  runner->SetZeroInput();
+//   runner->SetZeroInput();
+    runner->SetInput(data_images_dogs_bin)
 }
 
 // Add to this method to return real inference results.
