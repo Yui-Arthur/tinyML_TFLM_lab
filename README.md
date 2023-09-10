@@ -20,3 +20,12 @@
 4. copy the .bin file into F767ZI
 5. see the output in termite
 
+
+## inference time & arena size
+
+| - | TFLM | TFLM + int8 Quant | TFLM + int8 Quant + cmsis | 
+| - |------|-------------------|---------------------------|
+|Time(us)|4,634,854|4,672,161|437,600|
+|Arena Size(bytes) | 201696 |  54452 | 55108 |
+
+
