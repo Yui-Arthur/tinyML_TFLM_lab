@@ -45,16 +45,16 @@ DigitalOut timestampPin(D7);
 constexpr int kTensorArenaSize = ARENA_SIZE;
 alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 
-#define QUANT_MODEL false
-#define IN_IO_TYPE float
-#define OUT_IO_TYPE float
-#define OP_NUM 7
+// #define QUANT_MODEL false
+// #define IN_IO_TYPE float
+// #define OUT_IO_TYPE float
+
 tflite::MicroModelRunner<IN_IO_TYPE, OUT_IO_TYPE, OP_NUM> *runner;
 
 // Implement this method to prepare for inference and preprocess inputs.
 void th_load_tensor() {
 //   runner->SetZeroInput();
-    int input_length = runner->SetInput((float*)img_bin);
+    int input_length = runner->SetInput((IN_IO_TYPE*)img_bin);
 }
 
 // Add to this method to return real inference results.
@@ -92,7 +92,10 @@ void th_infer() { runner->Invoke(); }
 
 /// \brief optional API.
 void th_final_initialize(void) {
-  static tflite::MicroMutableOpResolver<7> resolver;
+  static tflite::MicroMutableOpResolver<OP_NUM> resolver;
+//   if(QUANT_MODEL)
+//     op_size = 8;
+
 
   resolver.AddAdd();
   resolver.AddFullyConnected();
@@ -101,6 +104,9 @@ void th_final_initialize(void) {
   resolver.AddReshape();
   resolver.AddSoftmax();
   resolver.AddAveragePool2D();
+  if(QUANT_MODEL)
+    resolver.AddQuantize();
+
   static tflite::MicroModelRunner<IN_IO_TYPE, OUT_IO_TYPE, OP_NUM> model_runner(
       model, resolver, tensor_arena, kTensorArenaSize);
   runner = &model_runner;
