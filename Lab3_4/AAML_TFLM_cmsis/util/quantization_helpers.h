@@ -15,7 +15,7 @@ limitations under the License.
 #include <limits.h>
 #include <math.h>
 
-inline float DequantizeInt8ToFloat(int8_t value, float scale, int zero_point) {
+inline float DequantizeInt8ToFloat(uint8_t value, float scale, int zero_point) {
   return static_cast<float>(value - zero_point) * scale;
 }
 

@@ -173,23 +173,25 @@ arg_claimed_t ee_profile_parse(char *command) {
  *
  */
 void ee_infer(size_t n, size_t n_warmup) {
-  th_load_tensor(); /* if necessary */
   th_printf("m-warmup-start-%d\r\n", n_warmup);
   while (n_warmup-- > 0) {
+    th_load_tensor(); /* if necessary */
     th_infer(); /* call the API inference function */
+    th_results();
   }
   th_printf("m-warmup-done\r\n");
   th_printf("m-infer-start-%d\r\n", n);
   uint32_t start = th_timestamp();
   th_pre();
   while (n-- > 0) {
+    th_load_tensor(); /* if necessary */
     th_infer(); /* call the API inference function */
+    th_results();
   }
   th_post();
   uint32_t end = th_timestamp();
   th_printf("m-infer-done\r\n");
   th_printf("m-time-elapsed: %u us\r\n", end-start);
-  th_results();
 }
 
 arg_claimed_t ee_buffer_parse(char *p_command) {

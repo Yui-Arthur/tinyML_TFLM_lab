@@ -36,21 +36,25 @@ in th_results is copied from the original in EEMBC.
 #include "ic/ic_model_data.h"
 #include "ic/ic_model_settings.h"
 
+#include "img.h"
+
 UnbufferedSerial pc(USBTX, USBRX);
 DigitalOut timestampPin(D7);
 
 // AAML tinyML Lab: ARENA_SIZE is defined in tensorflow/lite/c/common.h
 constexpr int kTensorArenaSize = ARENA_SIZE;
-uint8_t tensor_arena[kTensorArenaSize];
+alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 
-#define QUANT_MODEL true
-#define IO_TYPE int8_t
-#define OP_NUM 7
-alignas(16) tflite::MicroModelRunner<IO_TYPE, IO_TYPE, OP_NUM> *runner;
+// #define QUANT_MODEL false
+// #define IN_IO_TYPE float
+// #define OUT_IO_TYPE float
+
+tflite::MicroModelRunner<IN_IO_TYPE, OUT_IO_TYPE, OP_NUM> *runner;
 
 // Implement this method to prepare for inference and preprocess inputs.
 void th_load_tensor() {
-  runner->SetZeroInput();
+//   runner->SetZeroInput();
+    int input_length = runner->SetInput((IN_IO_TYPE*)img_bin);
 }
 
 // Add to this method to return real inference results.
@@ -62,25 +66,24 @@ void th_results() {
    */
   th_printf("m-results-[");
   int kCategoryCount = 10;
-
+  float maxx = -1;
+  int maxx_idx = -1;
   for (size_t i = 0; i < kCategoryCount; i++) {
-    // DequantizeInt8ToFloat(runner->GetOutput()[i], runner->output_scale(),
-    //                       runner->output_zero_point());
+    float converted =
     #if QUANT_MODEL
-      int8_t result = runner->GetOutput()[i];
-      th_printf("%d", result);
-      if (i < (nresults - 1)) {
-        th_printf(",");
-      }
+        DequantizeInt8ToFloat(runner->GetOutput()[i], runner->output_scale(),
+                              runner->output_zero_point());
     #else
-      float converted = runner->GetOutput()[i];
-      th_printf("%0.3f", converted);
-      if (i < (nresults - 1)) {
-        th_printf(",");
-      }
-    #endif // QUANT_MODEL
+        runner->GetOutput()[i];
+    #endif // IO_TYPE == int8_t
+    if(converted > maxx) maxx = converted , maxx_idx = i;
+    th_printf("%0.6f", converted);
+    if (i < (nresults - 1)) {
+      th_printf(",");
+    }
   }
   th_printf("]\r\n");
+  th_printf("max class : %d , conf : %f\r\n" , maxx_idx , maxx);
   th_printf("m-arena-size : %d bytes\r\n" , runner->arena_size() );
 }
 
@@ -89,7 +92,10 @@ void th_infer() { runner->Invoke(); }
 
 /// \brief optional API.
 void th_final_initialize(void) {
-  static tflite::MicroMutableOpResolver<7> resolver;
+  static tflite::MicroMutableOpResolver<OP_NUM> resolver;
+//   if(QUANT_MODEL)
+//     op_size = 8;
+
 
   resolver.AddAdd();
   resolver.AddFullyConnected();
@@ -98,7 +104,10 @@ void th_final_initialize(void) {
   resolver.AddReshape();
   resolver.AddSoftmax();
   resolver.AddAveragePool2D();
-  static tflite::MicroModelRunner<IO_TYPE, IO_TYPE, OP_NUM> model_runner(
+  if(QUANT_MODEL)
+    resolver.AddQuantize();
+
+  static tflite::MicroModelRunner<IN_IO_TYPE, OUT_IO_TYPE, OP_NUM> model_runner(
       model, resolver, tensor_arena, kTensorArenaSize);
   runner = &model_runner;
 }
