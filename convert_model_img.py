@@ -61,9 +61,8 @@ def cover_img(opt):
 
 def cover_model(opt):
     project_path = Path(opt['project'])
-    subprocess.run(f"xxd -i {opt['model']} > {project_path / 'model.cc'}" , shell=True , timeout=5)
-    subprocess.run(f"(echo -ne '#include \'{project_path}/ic/ic_model_data.h\'\nalignas(8) '; cat {project_path}/model.cc) > {project_path}/ic/ic_model_data.cc" , shell=True , timeout=5)
-    subprocess.run(f"sed -i -E 's/(unsigned\s.*\s).*(_len|\[\])/const \1model\2/g' {project_path}/ic/ic_model_data.cc" , shell=True , timeout=5)
+    subprocess.run(["/bin/bash", "cover_model.sh" , opt['model'] , str(project_path)] , timeout=5 )
+    
 
 
 def main(opt):
