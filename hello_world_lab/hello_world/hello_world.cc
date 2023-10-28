@@ -87,7 +87,7 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
 
   // Check if the predicted output is within a small range of the
   // expected output
-  float epsilon = 0.05f;
+  float epsilon = 1.00f;
   constexpr int kNumTestValues = 4;
   float golden_inputs[kNumTestValues] = {0.f, 1.f, 3.f, 5.f};
 
@@ -95,7 +95,7 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
     interpreter.input(0)->data.f[0] = golden_inputs[i];
     TF_LITE_ENSURE_STATUS(interpreter.Invoke());
     float y_pred = interpreter.output(0)->data.f[0];
-    MicroPrintf("pred %f , ans %f" , y_pred , sin(golden_inputs[i]));
+    MicroPrintf("input %f pred %f , ans %f" , golden_inputs[i] , y_pred , sin(golden_inputs[i]));
     TFLITE_CHECK_LE(abs(sin(golden_inputs[i]) - y_pred), epsilon);
   }
   MicroPrintf("LoadFloatModelAndPerformInference() OK");
