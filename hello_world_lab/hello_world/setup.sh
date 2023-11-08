@@ -1,16 +1,34 @@
-git clone https://github.com/tensorflow/tflite-micro
-cd tflite-micro
-# git am ../patches/0001-profiler.patch
-
-# Third party files need to be downloaded to build tflite-micro.
-# For instance, Flatbuffers is not natively included in tflite-micro.
-make -f tensorflow/lite/micro/tools/make/Makefile third_party_downloads
+CMSIS=false
+while getopts 'ch' flag; do
+ case $flag in
+   h) 
+    echo "-c to set the CMSIS Kernel in TFLM"
+    exit 0
+    ;;
+   c)
+    CMSIS=true
+    ;; 
+   ?)
+    echo "Argument Error"
+    exit 1
+   ;;
+ esac
+done
 
 # Returns all necessary header and source files
 OPTIONS="OPTIMIZED_KERNEL_DIR=cmsis_nn"
 if [ "$CMSIS" = false ] ; then
   OPTIONS=""
 fi
+echo $OPTIONS
+
+git clone https://github.com/tensorflow/tflite-micro
+cd tflite-micro
+
+# Third party files need to be downloaded to build tflite-micro.
+# For instance, Flatbuffers is not natively included in tflite-micro.
+make -f tensorflow/lite/micro/tools/make/Makefile third_party_downloads
+
 HEADERS=$(make -f tensorflow/lite/micro/tools/make/Makefile $OPTIONS list_library_headers)
 SOURCES=$(make -f tensorflow/lite/micro/tools/make/Makefile $OPTIONS list_library_sources)
 TP_HEADERS=$(make -f tensorflow/lite/micro/tools/make/Makefile $OPTIONS list_third_party_headers)
