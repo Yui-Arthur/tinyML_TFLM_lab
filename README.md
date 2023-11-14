@@ -34,7 +34,7 @@
 1. change the model architecture (add / remove some layer) in `train_with_cifar10.ipynb`
 2. compare the new model's(add/remove) `Inference Time` , `Arena size` , `Model size` with origin one in non-quant / quant / quant + CMSIS condition
 
-example
+### you need to complete the following table
 | Method | Time(us) | Model size | Arena Size |
 |--------------------|----------|------------|------------|
 | remove layer float | - | - | - |
