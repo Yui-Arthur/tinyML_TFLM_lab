@@ -104,28 +104,30 @@ TfLiteStatus LoadModelAndPerformInference(bool quant) {
   tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
                                        kTensorArenaSize);
 
+  TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
+
   TfLiteTensor* input = interpreter.input(0);
   TFLITE_CHECK_NE(input, nullptr);
 
   TfLiteTensor* output = interpreter.output(0);
   TFLITE_CHECK_NE(output, nullptr);
 
-  float output_scale = 0;
-  int output_zero_point = 0;
-
-  if(quant)
-    output_scale = output->params.scale , output_zero_point = output->params.zero_point; 
-
-  TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
-
-
+  float output_scale = 0, input_scale = 0;
+  int output_zero_point = 0 , input_zero_point = 0;
+  
+  if(quant){
+    output_scale = output->params.scale , output_zero_point = output->params.zero_point;
+    input_scale = input->params.scale , input_zero_point = input->params.zero_point;
+    MicroPrintf("Input quant info : %f , %d",input->params.scale , input->params.zero_point);
+    MicroPrintf("Output quant info : %f , %d",output->params.scale , output->params.zero_point);
+  }
 
   constexpr int kNumTestValues = 4;
   float golden_inputs[kNumTestValues] = {0.f, 1.f, 3.f, 5.f};
 
   for (int i = 0; i < kNumTestValues; ++i) {
     if(quant)
-        interpreter.input(0)->data.int8[0] = (int)golden_inputs[i];
+        interpreter.input(0)->data.int8[0] = golden_inputs[i] / input_scale + input_zero_point;
     else
         interpreter.input(0)->data.f[0] = golden_inputs[i];
     mbed::Timer t;
@@ -138,7 +140,7 @@ TfLiteStatus LoadModelAndPerformInference(bool quant) {
     if(quant)
         y_pred = (interpreter.output(0)->data.int8[0] - output_zero_point) * output_scale;
     else
-        interpreter.output(0)->data.f[0];
+        y_pred = interpreter.output(0)->data.f[0];
     
     MicroPrintf("inference with %ld (ns)", std::chrono::duration_cast<std::chrono::microseconds>(t.elapsed_time()).count());
     MicroPrintf("  input\t%f\n  pred\t%f\n  ans\t%f\n  diff\t%f\n", golden_inputs[i] , y_pred , sin(golden_inputs[i]) , abs(sin(golden_inputs[i]) - y_pred));
