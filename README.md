@@ -25,10 +25,15 @@
 
 ## inference time with Lab 1~4 Images Classification & arena size
 
-| - | TFLM | TFLM + int8 Quant | TFLM + int8 Quant + cmsis | 
+| NUCLEO_F767ZI | TFLM | TFLM + int8 Quant | TFLM + int8 Quant + cmsis | 
 | - |------|-------------------|---------------------------|
 |Time(us)|4,634,854|4,672,161|437,600|
 |Arena Size(bytes) | 201,696 |  54,452 | 55,108 |
+
+| DISCO_F746NG | TFLM | TFLM + int8 Quant | TFLM + int8 Quant + cmsis | 
+| - |------|-------------------|---------------------------|
+|Time(us)|4,625,590 |5,747,635 | 428,668 |
+|Arena Size(bytes) |201,696|54,452| 55,108  |
 
 ## Hw1 : Images Classification 
 1. change the model architecture (add / remove some layer) in `train_with_cifar10.ipynb`
