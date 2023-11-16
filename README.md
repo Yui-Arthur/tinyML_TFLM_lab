@@ -54,14 +54,11 @@
 
 
 
-# hello world lab
-## Train the tf model with Sin function & Compile to bin file
-1. import ```hello_world_lab/compile.ipynb``` on colab
-2. run the code and it will start training & compile
-2. after alll , download ```hello_world.bin ``` 
-## inference on F767ZI
-1. connect the F767ZI with your computer
-2. download termite
-3. open termite & set the baod rate 9600
-4. copy the .bin file into F767ZI
-5. see the output in termite
+# [hello world lab](hello_world_lab)
+
+#### TODO complete the table
+| Method | Time(us) | Model size | Arena Size |
+| ------ | -------- | ---------- | ---------- |
+| float | - | - | - |
+| quant | - | - | - |
+| quant + CMSIS | - | - | - |
